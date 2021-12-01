@@ -1,4 +1,3 @@
-import math
 NUMBER_CHAR = "1234567890."
 SYMBOL_CHAR = "+-*/^()"
 VARIABLE_CHAR = "abcdexyz"
@@ -10,18 +9,23 @@ LETTER_TYPE = 2
 
 FUNCTION = 0
 VALUE = 1
-UN_KNOW = 2
-
+UNKNOWN = 2
 
 SYMBOLS = [["+", "-"], ["*", "/"], ["^"]]
+OPERATORS = [operator_ for _operators in SYMBOLS for operator_ in _operators]
 FUNCTIONS = ["sin", "cos", "tan", "sqrt"]
 
 
 def get_formula(formula_raw):
 	formula_raw = clean_formula(formula_raw)
 	formula_split = split_formula(formula_raw)
+	check_result = check_syntax(formula_split)
+	if check_result is not None:
+		raise TypeError(check_result)
+	syntax_clean = make_syntax_clean(formula_split)
+	print(syntax_clean)
 
-	return get_formula_clean(formula_split)
+	return get_formula_clean(syntax_clean)
 
 
 def get_formula_clean(formula_clean):
@@ -31,7 +35,7 @@ def get_formula_clean(formula_clean):
 		if is_number(element):
 			return VALUE, float(element)
 		else:
-			return UN_KNOW, element
+			return UNKNOWN, element
 
 	if type(formula_clean[0]) == type([]) and len(formula_clean) == 1:
 		formula_clean = formula_clean[0]
@@ -62,20 +66,19 @@ def get_formula_clean(formula_clean):
 		formula.append(buffer)
 
 	symbol_index = -1
-	max_index = len(formula) + 1
 
 	for operators_ in SYMBOLS:
-		min_operator = max_index
+		max_operator = -1
 		for operator_ in operators_:
 			if operator_ in formula:
-				min_operator = min(min_operator, formula.index(operator_))
-		if min_operator != max_index:
-			symbol_index = min_operator
+				max_operator = max(max_operator, get_last_occurrence(formula, operator_))
+		if max_operator != -1:
+			symbol_index = max_operator
 			break
 
-
 	if symbol_index != -1:
-		formula_final = (FUNCTION, formula[symbol_index], get_formula_clean(formula[:symbol_index]), get_formula_clean(formula[symbol_index + 1:]))
+		formula_final = (FUNCTION, formula[symbol_index], get_formula_clean(formula[:symbol_index]),
+						 get_formula_clean(formula[symbol_index + 1:]))
 	elif formula[0] in FUNCTIONS:
 		formula_final = (FUNCTION, formula[0], get_formula(formula[1]))
 	else:
@@ -84,6 +87,49 @@ def get_formula_clean(formula_clean):
 	return formula_final
 
 
+def get_last_occurrence(list_input, element_found):
+	last_occurrence_index = -1
+	for i, e in enumerate(list_input):
+		if e == element_found:
+			last_occurrence_index = i
+
+	return last_occurrence_index
+
+
+def make_syntax_clean(formula):
+	final_formula = []
+	previous_type = -1
+	previous_char = ""
+	for i, e in enumerate(formula):
+		cur_type = get_type(e)
+		if (e == "-" or e == "+") and (previous_char == "(" or previous_char == ""):
+			final_formula.append("0")
+
+		if (e == "(" or cur_type == LETTER_TYPE) and previous_char not in OPERATORS and previous_type != -1 and previous_char not in FUNCTIONS:
+			final_formula.append("*")
+		final_formula.append(e)
+		previous_char = e
+		previous_type = cur_type
+
+	return final_formula
+
+
+def check_syntax(formula):
+	print(OPERATORS)
+
+	if get_type(formula[0]) in OPERATORS and formula[0] != "-":
+		return "Fist Element can be an operator"
+	if get_type(formula[-1]) in OPERATORS:
+		return "Last Element can be an operator"
+
+	for i, e in enumerate(formula):
+		if e in OPERATORS and (formula[i - 1] in OPERATORS or formula[i + 1] in OPERATORS):
+			return "Tow operator cannot follow each other"
+
+		if e in FUNCTIONS and formula[i + 1] != "(":
+			return "You a bracket after a function"
+
+	return None
 
 
 def clean_formula(formula_raw):
@@ -113,8 +159,6 @@ def split_formula(formula_raw):
 	if buffer_type != NONE_TYPE:
 		split_formula.append(buffer)
 
-
-
 	return split_formula
 
 
@@ -127,7 +171,8 @@ def get_type(char):
 		return LETTER_TYPE
 	return NONE_TYPE
 
-def is_number(number:str):
+
+def is_number(number: str):
 	for char in number:
 		if char not in NUMBER_CHAR:
 			return False
