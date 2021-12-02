@@ -12,10 +12,10 @@ def main(stdscr: curses.window):
 	current_menu = navigation.Calculator(stdscr)
 	while True:
 		key_input = str(stdscr.getkey())
+		if key_input == "^C":
+			exit(0)
 		stdscr.addstr(5, 0, str(key_input) + " " * 30)
 		current_menu.update(key_input)
-
-
 
 
 curses.wrapper(main)

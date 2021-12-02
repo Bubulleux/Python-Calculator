@@ -28,11 +28,11 @@ class Calculator(Menu):
 
 	def __init__(self, window: curses.window):
 		super().__init__(window)
-		self.text_input = TextInput(self.window, 1, 1, self.width - 2)
 
 	def resize_window(self):
 		super().resize_window()
 		curses.textpad.rectangle(self.window, 0, 0, 2, self.width - 1)
+		self.text_input = TextInput(self.window, 1, 1, self.width - 2)
 
 	def update(self, key):
 		super().update(key)

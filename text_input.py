@@ -23,7 +23,8 @@ class TextInput:
 			self.text = self.text[:self.cursor_pos] + key_input + self.text[self.cursor_pos:]
 			self.cursor_pos += 1
 
-		self.stdscr.addstr(6, 0, f"Char Input {self.view} {self.length} {self.cursor_pos}: {self.text} {' ' * 20}")
+		self.stdscr.addstr(6, 0, f"Char Input view:{self.view} length: {self.length} cursor_pos:{self.cursor_pos}: {self.text} {' ' * 20}")
+		self.stdscr.addstr(8, 0, f"{self.pos_y} {self.pos_x + self.cursor_pos - self.view}")
 		if self.cursor_pos < self.view:
 			self.view = self.cursor_pos
 
@@ -35,7 +36,7 @@ class TextInput:
 	def refresh(self):
 		text_rendered = self.text[self.view: self.view + self.length]
 		self.stdscr.addstr(self.pos_x, self.pos_y, text_rendered + (" " * (self.length - len(text_rendered))))
-		self.stdscr.addstr(20, 0, self.pos_y, self.pos_x + self.cursor_pos - self.view)
+		#self.stdscr.addstr(20, 0, f"{self.pos_y} {self.pos_x + self.cursor_pos - self.view}")
 		#self.stdscr.move(self.pos_y, self.pos_x + self.cursor_pos - self.view)
 
 
